@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from simple_pid import PID
-import time, glob, yaml, subprocess
+import time, glob, yaml, subprocess, os
 
 class PwmFan:
     def __init__(self, name, devPath, minPwm, maxPwm, press_srcs):
@@ -35,12 +35,17 @@ class TempSensor:
         self.devPath = devPath
 
     def read_temp(self):
-        f = open(self.devPath, 'r')
-        # integer type temperature in milli degrees
-        temp = str(f.read()).strip()
-        f.close()
-        # convert to float degrees
-        return int(temp)/1000.0
+        if self.devPath == "nvidia":
+            command_output = os.popen("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits")            
+            nvidia_gpu_temperature = float(command_output.read()[:-1])
+            return nvidia_gpu_temperature 
+        else:
+            f = open(self.devPath, 'r')
+            # integer type temperature in milli degrees
+            temp = str(f.read()).strip()
+            f.close()
+            # convert to float degrees
+            return int(temp)/1000.0
 
 class CmdTempSensor:
     def __init__(self, temp_cmd):
@@ -85,9 +90,12 @@ class HeatPressureSrc:
         return self.name
 
 def get_only_one_wildcard_match(wc_path):
-    should_be_a_single_path = glob.glob(wc_path)
-    assert len(should_be_a_single_path) == 1
-    return should_be_a_single_path[0]
+    if wc_path != "nvidia":
+        should_be_a_single_path = glob.glob(wc_path)
+        assert len(should_be_a_single_path) == 1
+        return should_be_a_single_path[0]
+    else:
+        return wc_path
 
 def instantiate_fan(cfg):
     name = cfg['name']

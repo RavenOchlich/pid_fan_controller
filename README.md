@@ -44,6 +44,28 @@ In order to better utilise the fans and reduce noise, 5 fans need to be controll
 | top intake fan    | CPU fan                             |
 | exhaust           | middle intake fan                   |
 
+# Config File for NVIDIA GPU
+Use the nvidia keyword to select the nvidia gpu temperature as a heat source 
+```
+sample_interval: 0.5
+heat_pressure_srcs:
+  - name: CPU
+    wildcard_path: /sys/bus/platform/devices/coretemp.0/hwmon/hwmon*/temp1_input
+    PID_params:
+      set_point: 85 
+      P: -0.015
+      I: -0.005
+      D: -0.006
+
+  - name: GPU 
+    wildcard_path: nvidia 
+    PID_params:
+      set_point: 65 
+      P: -0.015
+      I: -0.005
+      D: -0.006
+```
+
 # Profile the controller
 
 It is important for the system performance that the PID controller is not taking too many CPU cycles.
